@@ -9,4 +9,4 @@ $ docker-compose up
 $ open http://localhost:16686/
 ```
 
-https://user-images.githubusercontent.com/4374383/56575149-fdc32000-65ff-11e9-80aa-04ab5aab8e6e.png
+![sample](https://user-images.githubusercontent.com/4374383/56575149-fdc32000-65ff-11e9-80aa-04ab5aab8e6e.png)
