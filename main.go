@@ -5,6 +5,7 @@ import (
 	"fmt"
 	pb "github.com/nokamoto/poc-go-jaeger/service"
 	"go.opencensus.io/exporter/jaeger"
+	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/trace"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -17,6 +18,7 @@ import (
 type serviceA struct{}
 
 func (*serviceA) Send(ctx context.Context, _ *pb.Request) (*pb.Response, error) {
+	fmt.Printf("ctx: %v", ctx)
 	ctx, span := trace.StartSpan(ctx, "ServiceA.Send")
 	defer span.End()
 
@@ -46,6 +48,7 @@ func main() {
 	fmt.Printf("listen tcp port (%d)\n", *port)
 
 	opts := []grpc.ServerOption{}
+	opts = append(opts, grpc.StatsHandler(&ocgrpc.ServerHandler{}))
 	server := grpc.NewServer(opts...)
 
 	pb.RegisterServiceAServer(server, &serviceA{})
@@ -57,6 +60,7 @@ func main() {
 
 		var opts []grpc.DialOption
 		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithStatsHandler(new(ocgrpc.ClientHandler)))
 
 		conn, err := grpc.Dial(*addr, opts...)
 		if err != nil {
@@ -70,6 +74,7 @@ func main() {
 			ctx, span := trace.StartSpan(context.Background(), "ClientCall")
 			res, err := client.Send(ctx, &pb.Request{})
 			if err != nil {
+				span.SetStatus(trace.Status{Code: trace.StatusCodeUnimplemented, Message: err.Error()})
 				fmt.Printf("err: %v\n", err)
 			} else {
 				fmt.Printf("rec: %v\n", res)

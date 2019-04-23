@@ -33,15 +33,25 @@
   version = "v0.5.1"
 
 [[projects]]
-  digest = "1:a7c93f47928de74e8c1075c3db6da352777ea0d6e1779d4785e7f2bd17acd49e"
+  digest = "1:972f83e5a80da63d1a6395e11ac58435d0915652b83d531e52aabaea7fe4ff1d"
   name = "go.opencensus.io"
   packages = [
     ".",
     "exporter/jaeger",
     "exporter/jaeger/internal/gen-go/jaeger",
     "internal",
+    "internal/tagencoding",
+    "metric/metricdata",
+    "metric/metricproducer",
+    "plugin/ocgrpc",
+    "resource",
+    "stats",
+    "stats/internal",
+    "stats/view",
+    "tag",
     "trace",
     "trace/internal",
+    "trace/propagation",
     "trace/tracestate",
   ]
   pruneopts = "UT"
@@ -168,6 +178,7 @@
   input-imports = [
     "github.com/golang/protobuf/proto",
     "go.opencensus.io/exporter/jaeger",
+    "go.opencensus.io/plugin/ocgrpc",
     "go.opencensus.io/trace",
     "golang.org/x/net/context",
     "google.golang.org/grpc",
