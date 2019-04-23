@@ -19,3 +19,5 @@ services:
     image: nokamoto/poc-go-jaeger:latest
     ports:
       - 9090:9090
+    depends_on:
+      - jaeger
