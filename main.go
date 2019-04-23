@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	pb "github.com/nokamoto/poc-go-jaeger/service"
+	"go.opencensus.io/exporter/jaeger"
+	"go.opencensus.io/trace"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -14,13 +16,19 @@ import (
 
 type serviceA struct{}
 
-func (*serviceA) Send(_ context.Context, _ *pb.Request) (*pb.Response, error) {
+func (*serviceA) Send(ctx context.Context, _ *pb.Request) (*pb.Response, error) {
+	ctx, span := trace.StartSpan(ctx, "ServiceA.Send")
+	defer span.End()
+
 	return nil, grpc.Errorf(codes.Unimplemented, "not implemented yet")
 }
 
 type serviceB struct{}
 
-func (*serviceB) Send(_ context.Context, _ *pb.Request) (*pb.Response, error) {
+func (*serviceB) Send(ctx context.Context, _ *pb.Request) (*pb.Response, error) {
+	ctx, span := trace.StartSpan(ctx, "ServiceB.Send")
+	defer span.End()
+
 	return nil, grpc.Errorf(codes.Unimplemented, "not implemented yet")
 }
 
@@ -59,17 +67,37 @@ func main() {
 		client := pb.NewServiceAClient(conn)
 
 		for {
-			ctx := context.Background()
+			ctx, span := trace.StartSpan(context.Background(), "ClientCall")
 			res, err := client.Send(ctx, &pb.Request{})
 			if err != nil {
 				fmt.Printf("err: %v\n", err)
 			} else {
 				fmt.Printf("rec: %v\n", res)
 			}
+			span.End()
 
 			time.Sleep(3 * time.Second)
 		}
 	}()
+
+	agentEndpointURI := "jaeger:6831"
+	collectorEndpointURI := "http://jaeger:14268/api/traces"
+
+	je, err := jaeger.NewExporter(jaeger.Options{
+		AgentEndpoint:     agentEndpointURI,
+		CollectorEndpoint: collectorEndpointURI,
+		Process: jaeger.Process{
+			ServiceName: "poc-go-jaeger",
+		},
+		OnError: func(err error) {
+			fmt.Printf("err: %v\n", err)
+		},
+	})
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create the Jaeger exporter: %v", err))
+	}
+	trace.RegisterExporter(je)
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	fmt.Println("ready to serve")
 	err = server.Serve(lis)
