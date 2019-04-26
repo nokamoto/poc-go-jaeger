@@ -9,7 +9,7 @@ WORKDIR /go/src/github.com/nokamoto/poc-go-jaeger
 COPY Gopkg.lock .
 COPY Gopkg.toml .
 COPY service ./service
-COPY main.go ./main.go
+COPY *.go ./
 
 RUN dep ensure -vendor-only=true
 
